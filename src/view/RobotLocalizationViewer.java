@@ -218,7 +218,7 @@ public class RobotLocalizationViewer {
 		}
 			
 		states[tX][tY][4].setBackground(Color.black);
-		if( sX != -1)
+		if( sX != -1 && sY != -1)
 			states[sX][sY][4].setBackground(Color.cyan);
 		
 				

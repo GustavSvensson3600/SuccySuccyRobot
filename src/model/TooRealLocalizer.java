@@ -50,9 +50,11 @@ public class TooRealLocalizer implements EstimatorInterface {
 	}
 
 	public int[] getCurrentReading() {
-		return est.position();
+		int []pos = est.position();
+		pos[0] = Math.min(Math.max(pos[0], 0), rows - 1);
+		pos[1] = Math.min(Math.max(pos[1], 0), cols - 1);
+		return pos;
 	}
-
 
 	public double getCurrentProb( int y, int x) {
 		State s = bot.getState();
