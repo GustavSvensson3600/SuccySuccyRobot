@@ -31,31 +31,19 @@ public class State {
 		// p(continue in same heading | no wall) = 0.6
 		// p(change heading | no wall) = 0.4
 		// p(change heading | wall) = 1
-		ArrayList<Integer> possibleH = new ArrayList<Integer>();
+		ArrayList<Integer> possibleH;
 		double[][] t = new double[3][3];
 		double pool = 1;
 		if(crash(x,y,h)) {
 			//Going to crash -> Change direction
-			for (int i=1; i<=4; i++) {
-				if(i != h) {
-					if(!crash(x,y,i)) {
-						possibleH.add(i);
-					}
-				}
-			}
+			possibleH = getHeadings(h);
 		} else {
 			//No crash -> 0.6 on current direction
 			// 0.4 -> divided equally on possible heading changes
 			int [] relPos = relativePosition(h);
 			pool -= 0.6;
 			t[relPos[0]][relPos[1]] = 0.6;
-			for (int i=1; i<=4; i++) {
-				if(i != h) {
-					if(!crash(x,y,i)) {
-						possibleH.add(i);
-					}
-				}
-			}	
+			possibleH = getHeadings(h);
 		}
 		//Divide up rest of pool on possible headings
 		for (int i = 0; i<possibleH.size(); i++) {
@@ -65,6 +53,20 @@ public class State {
 		}
 		return t;
 	}
+	
+	private ArrayList<Integer> getHeadings(int h) {
+		ArrayList<Integer> possibleH = new ArrayList<Integer>(); 
+		for (int i=1; i<=4; i++) {
+			if(i != h) {
+				if(!crash(x,y,i)) {
+					possibleH.add(i);
+				}
+			}
+		}
+		return possibleH;
+	}
+	
+	
 	
 	private int[] relativePosition(int h) {
 		//North = 1, East = 2, West = 3, South = 4.
