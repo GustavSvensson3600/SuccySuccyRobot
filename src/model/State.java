@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class State {
-	public final static int MATRIX_SIZE = 5;
-	public final static int MATRIX_SIZE_HALF = 2;
-	
 	public final static double CORRECT = 0.1;
 	public final static double SQUARE_1 = 0.05;
 	public final static double SQUARE_2 = 0.025;
@@ -127,36 +124,31 @@ public class State {
 		return Math.abs(dx) <= 1 && Math.abs(dy) <= 1;
 	}
 	
-	private boolean onSquareEdge(int x, int y, int size) {
-		size -= 1; // 0..size-1 inclusive
-		return x == size || y == size || x == 0 || y == 0;
-	}
-	
 	/**
 	 * The emission matrix is static b/c all states are static?
-	 * @return the emission matrix for this state
+	 * @return the 5x5 emission matrix for this state
 	 */
 	public double[][] emission() {
-		double[][] mat = new double[MATRIX_SIZE][MATRIX_SIZE];
+		double[][] mat = new double[5][5];
 		int n_s1 = 0;
 		int n_s2 = 0;
 		
 		// true position
-		mat[MATRIX_SIZE_HALF][MATRIX_SIZE_HALF] = CORRECT;
+		mat[2][2] = CORRECT;
 		
 		// false positions (L_s1, L_s2)
-		for (int y = 0; y < MATRIX_SIZE; y++) {
-			for (int x = 0; x < MATRIX_SIZE; x++) {
+		for (int y = 0; y < 5; y++) {
+			for (int x = 0; x < 5; x++) {
 				// ignore center b/c it's not on any edge
-				if (x == MATRIX_SIZE_HALF && y == MATRIX_SIZE_HALF) 
+				if (x == 2 && y == 2) 
 					continue;
 				
-				boolean inside = grid.inside(this.x + x - MATRIX_SIZE_HALF, this.y + y - MATRIX_SIZE_HALF);
+				boolean inside = grid.inside(this.x + x - 2, this.y + y - 2);
 				if (inside) {
-					if (onSquareEdge(x - 1, y - 1, 3)) {
+					if ((y >= 1 && y <= 3) && (x >= 1 && x <= 3)) {
 						n_s1 += 1;
 						mat[y][x] = SQUARE_1;
-					} else if (onSquareEdge(x, y, 5)) {
+					} else {
 						n_s2 += 1;
 						mat[y][x] = SQUARE_2;
 					}
