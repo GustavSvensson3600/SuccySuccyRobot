@@ -28,11 +28,8 @@ public class State {
 	 * @return the 5x5 transition matrix for this state
 	 */
 	public double[][] transition() {
-		// p(continue in same heading | no wall) = 0.6
-		// p(change heading | no wall) = 0.4
-		// p(change heading | wall) = 1
 		ArrayList<Integer> possibleH;
-		double[][] t = new double[3][3];
+		double[][] t = new double[5][5];
 		double pool = 1;
 		if(crash(x,y,h)) {
 			//Going to crash -> Change direction
