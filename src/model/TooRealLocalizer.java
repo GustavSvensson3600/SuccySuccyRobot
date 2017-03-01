@@ -1,20 +1,15 @@
 package model;
 
-import java.util.ArrayList;
-import java.util.Random;
-
 import control.EstimatorInterface;
 
 public class TooRealLocalizer implements EstimatorInterface {
 	
-	private enum Heading {
-		NORTH, EAST, WEST, SOUTH
-	}
-
 	private int rows, cols, head;
-	private int[] truePos, estPos;
-	private Heading currentH;
 	private Sensor sensor;
+	
+	private Bot bot;
+	private Grid grid;
+	private State est;
 
 	public TooRealLocalizer( int rows, int cols, int head) {		
 		this.rows = rows;
@@ -22,21 +17,10 @@ public class TooRealLocalizer implements EstimatorInterface {
 		this.head = head;
 		
 		this.sensor = new Sensor(cols, rows);
-		// this.hmm
-		initialState();
+		this.grid = new Grid(cols, rows);
+		this.bot = new Bot(new State(grid, 4, 4, 0));
+		this.est = bot.getState();
 	}
-
-	private void initialState() {
-		truePos = new int[2];
-		truePos[0] = rows/2;
-		truePos[1] = cols/2;
-		
-		estPos = new int[2];
-		estPos[0] = truePos[0];
-		estPos[1] = truePos[1];
-		
-		currentH = Heading.NORTH;
-	}	
 	
 	public int getNumRows() {
 		return rows;
@@ -50,8 +34,10 @@ public class TooRealLocalizer implements EstimatorInterface {
 		return head;
 	}
 	
-	public double getTProb( int x, int y, int h, int nX, int nY, int nH) {
-		return 0.0;
+	public double getTProb( int y, int x, int h, int nY, int nX, int nH) {
+		State origin = new State(grid, x, y, h);
+		State target = new State(grid, nX, nY, nH);
+		return origin.transition(target);
 	}
 
 	public double getOrXY( int rX, int rY, int x, int y) {
@@ -60,77 +46,54 @@ public class TooRealLocalizer implements EstimatorInterface {
 
 
 	public int[] getCurrentTruePosition() {
-		return truePos;
+		return bot.getState().position();
 	}
 
 	public int[] getCurrentReading() {
-		return estPos;
+		return est.position();
 	}
 
 
-	public double getCurrentProb( int x, int y) {
-		double ret = 0.1;
-		return ret;
+	public double getCurrentProb( int y, int x) {
+		State s = bot.getState();
+		return s.transition(new State(grid, x, y, State.NORTH)) +
+				s.transition(new State(grid, x, y, State.EAST)) +
+				s.transition(new State(grid, x, y, State.SOUTH)) +
+				s.transition(new State(grid, x, y, State.WEST));
 	}
 	
-	private void move() {
-		int dx = 0, dy = 0;
-		switch (currentH) {
-		case WEST: dx = -1; break;
-		case EAST: dx = 1; break;
-		case NORTH: dy = -1; break;
-		case SOUTH: dy = 1; break;
-		}
+	public State sample() {
+		State s = bot.getState();
+		// Only considers states with same direction
+		double[][] E = s.emission();
+		double r = Math.random();
 		
-		truePos[0] = Math.min(Math.max(truePos[0] + dy, 0), rows-1);
-		truePos[1] = Math.min(Math.max(truePos[1] + dx, 0), cols-1);
-	}
-	
-	/* ?? */
-	private Heading getHead(int y, int x, Heading old) {
-		ArrayList<Heading> available = new ArrayList<Heading>();
-		if (x > 0) available.add(Heading.WEST);
-		if (x < cols - 1) available.add(Heading.EAST);
-		if (y > 0) available.add(Heading.NORTH);
-		if (y < rows - 1) available.add(Heading.SOUTH);
-		available.remove(old);
-		Random rng = new Random();
-		return available.get(rng.nextInt(available.size()));
-	}
-	
-	
-	// [0, 0, 0.05, 0, 0.05, 0, 0, 0.05, ] = L_s1
-	// .... = L_s1
-	public void update() {
-		Random rng = new Random();
-		
-		
-		/* 
-		 * 	P( h_t+1 = h_t | not encountering a wall) = 0.7
-			P( h_t+1 != h_t | not encountering a wall) = 0.3
-			P( h_t+1 = h_t | encountering a wall) = 0.0
-			P( h_t+1 != h_t | encountering a wall) = 1.0
-		*/
-		
-		int[] stimulai = sensor.sample(truePos);
-		boolean found_wall = stimulai == null;
-		//P(wall | s_t och s_t-1)
-		
-		if (found_wall) {
-			// problem
-		} else {
-			if (rng.nextFloat() >= 0.75) {
-				// P( h_t+1 != h_t | not encountering a wall) = 0.3
-				currentH = getHead(truePos[1], truePos[0], currentH);
-			} else {
-				// keep moving
+		int nx = -1, ny = -1;
+		for (int y = 0; y < E.length; y++) {
+			for (int x = 0; x < E[y].length; x++) {
+				r -= E[y][x];
+				if (r <= 0) {
+					nx = x; ny = y;
+					break;
+				}
 			}
 		}
 		
-		move();
+		if (nx == -1 && ny == -1) {
+			// "nothing"
+			return null;
+		}
 		
-		System.out.println("Nothing is happening, no model to go for...");
+		return s.offset(nx - 2, ny - 2, s.heading());
 	}
 	
 	
+	public void update() {
+		// Update real world
+		bot.update();
+		
+		// Update model
+		State obs = sample();
+		est = obs == null ? est : obs;
+	}
 }

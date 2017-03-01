@@ -1,6 +1,7 @@
 package model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class State {
 	public final static int MATRIX_SIZE = 5;
@@ -28,10 +29,16 @@ public class State {
 	
 	
 	public State step(int h) {
-		int x = this.x;
-		int y = this.y;
 		int []dir = relativePosition(h);
-		return new State(grid, x + dir[1], y + dir[0], h);
+		return offset(dir[1], dir[0], h);
+	}
+
+	public State forward() {
+		return step(this.h);
+	}
+	
+	public State offset(int ox, int oy, int h) {
+		return new State(grid, x + ox, y + oy, h);
 	}
 	
 	/** 
@@ -52,11 +59,11 @@ public class State {
 		
 		// Can we continue in forward direction?
 		double p_forward = 0.6;
-		State forward = this.step(this.h);
+		State forward = this.forward();
 		if (possible.remove(forward)) {
-			int x = forward.x - this.x + MATRIX_SIZE_HALF;
-			int y = forward.y - this.y + MATRIX_SIZE_HALF;
-			t[y][x + this.h] = p_forward;
+			int x = forward.x - this.x + 1;
+			int y = forward.y - this.y + 1;
+			t[y][x * 4 + this.h] = p_forward;
 		} else {
 			p_forward = 0;
 		}
@@ -64,12 +71,11 @@ public class State {
 		// Split over adjacent states
 		double p_other = (1.0 - p_forward) / possible.size();
 		for (State next : possible) {			
-			int x = next.x - this.x + MATRIX_SIZE_HALF;
-			int y = next.y - this.y + MATRIX_SIZE_HALF;
+			int x = next.x - this.x + 1;
+			int y = next.y - this.y + 1;
+			t[y][x * 4 + next.heading()] = p_other;
 
-			t[y][x + h] = p_other;
 		}
-		
 		return t;
 	}
 	
@@ -77,7 +83,7 @@ public class State {
 	 * Find all possible states this state can transition to in one step.
 	 * @return array list of states
 	 */
-	private ArrayList<State> next() {
+	ArrayList<State> next() {
 		ArrayList<State> possible = new ArrayList<State>(); 
 		for (int h = 0; h < HEADINGS; h++) {
 			State next = this.step(h);
@@ -118,7 +124,7 @@ public class State {
 	public boolean reachable(State other) {
 		int dx = this.x - other.x;
 		int dy = this.y - other.y;
-		return Math.abs(dx) <= 2 && Math.abs(dy) <= 2;
+		return Math.abs(dx) <= 1 && Math.abs(dy) <= 1;
 	}
 	
 	private boolean onSquareEdge(int x, int y, int size) {
@@ -175,9 +181,35 @@ public class State {
 		
 		// Important: dx,dy is vector from this to other
 		// Adding half matrix size gives position in matrix
-		int x = (other.x - this.x) + MATRIX_SIZE_HALF;
-		int y = (other.y - this.y) + MATRIX_SIZE_HALF;
+		int x = (other.x - this.x) + 1;
+		int y = (other.y - this.y) + 1;
 		
-		return transition()[y][x];
+		return transition()[y][x * 4 + other.h];
 	}
+
+	/**
+	 * World position.
+	 * @return [y,x]
+	 */
+	public int[] position() {
+		return new int[]{y, x};
+	}
+
+
+	public int heading() {
+		return h;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof State)) return false;
+		State other = (State)obj;
+		return other.x == x && other.y == y && other.h == h;
+	}
+	
+	@Override
+	public int hashCode() {
+		return ("" + x + "" + y + "" + h).hashCode();
+	}
+
 }
