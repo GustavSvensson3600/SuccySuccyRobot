@@ -11,4 +11,9 @@ public class Grid {
 	public boolean inside(int x, int y) {
 		return x >= 0 && x < w && y >= 0 && y < h;
 	}
+
+	public int cols() {
+		return w;
+	}
+	public int rows() { return h; }
 }

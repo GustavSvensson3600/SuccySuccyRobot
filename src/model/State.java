@@ -15,7 +15,7 @@ public class State {
 	public final static int WEST = 3;
 	
 	private int x, y, h;
-	private Grid grid;
+	protected Grid grid;
 	
 	public State(Grid grid, int x, int y, int heading) {
 		this.y = y;
@@ -202,6 +202,17 @@ public class State {
 	@Override
 	public int hashCode() {
 		return ("" + x + "" + y + "" + h).hashCode();
+	}
+
+
+	public double emission(State xi) {
+		int dx = xi.x - this.x;
+		int dy = xi.y - this.y;
+		
+		if (Math.abs(dx) > 2 || Math.abs(dy) > 2)
+			return 0;
+
+		return emission()[dy + 2][dx + 2] / 4;
 	}
 
 }
