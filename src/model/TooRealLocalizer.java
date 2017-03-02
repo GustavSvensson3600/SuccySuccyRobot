@@ -150,7 +150,6 @@ public class TooRealLocalizer implements EstimatorInterface {
 		
 		// F = NORMALIZE(F_t)
 		double a = 1.0 / sum;
-		System.out.println(sum + " => " + a);
 		for (int i = 0; i < num_states; i++) {
 			F[i] = F_t[i] * a;
 		}

@@ -1,6 +1,5 @@
 package control;
 
-import model.DummyLocalizer;
 import model.TooRealLocalizer;
 import view.RobotLocalizationViewer;
 
