@@ -55,7 +55,7 @@ public class State {
 		ArrayList<State> possible = next();
 		
 		// Can we continue in forward direction?
-		double p_forward = 0.6;
+		double p_forward = 0.7;
 		State forward = this.forward();
 		if (possible.remove(forward)) {
 			int x = forward.x - this.x + 1;

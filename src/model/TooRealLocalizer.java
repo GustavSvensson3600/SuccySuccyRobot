@@ -72,9 +72,16 @@ public class TooRealLocalizer implements EstimatorInterface {
 	}
 
 	public double getOrXY( int rY, int rX, int y, int x) {
-		State origin = new State(grid, rX, rY, 0);
+		State origin;
+		
+		if (rX == -1 || rY == -1) {
+			origin = new NothingState(grid, rX, rY, 0);
+		} else {
+			origin = new State(grid, rX, rY, 0);
+		}
+		
 		State other = new State(grid, x, y, 0);
-		return origin.emission(other);
+		return origin.emission(other) * 4;
 	}
 
 
