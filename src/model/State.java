@@ -16,6 +16,7 @@ public class State {
 	
 	private int x, y, h;
 	protected Grid grid;
+	private double[][] T, E;
 	
 	public State(Grid grid, int x, int y, int heading) {
 		this.y = y;
@@ -43,6 +44,13 @@ public class State {
 	 * @return the 3x3*4 transition matrix for this state
 	 */
 	public double[][] transition() {
+		if (T == null) {
+			T = compute_t();
+		}
+		return T;
+	}
+	
+	private double[][] compute_t() {
 		/* Format: t = [y][x + h], 2<=y<=2, 2<=x<=2, 0<=h<=3
 		 * 
 		 * 0,0N 0,0E 0,0S 0,0W ... 0,2N 0,2E 0,2S 0,2W
@@ -80,7 +88,7 @@ public class State {
 	 * Find all possible states this state can transition to in one step.
 	 * @return array list of states
 	 */
-	ArrayList<State> next() {
+	protected ArrayList<State> next() {
 		ArrayList<State> possible = new ArrayList<State>(); 
 		for (int h = 0; h < HEADINGS; h++) {
 			State next = this.step(h);
@@ -129,6 +137,12 @@ public class State {
 	 * @return the 5x5 emission matrix for this state
 	 */
 	public double[][] emission() {
+		if (E == null) {
+			E = compute_e();
+		}
+		return E;	}
+	
+	private double[][] compute_e() {
 		double[][] mat = new double[5][5];
 		int n_s1 = 0;
 		int n_s2 = 0;
@@ -157,11 +171,8 @@ public class State {
 				}
 			}	
 		}
-		double nothing = 1.0 - CORRECT - n_s1 * SQUARE_1 - n_s2 * SQUARE_2; 
-		// TODO: somehow return nothing
 		return mat;
 	}
-	
 	/**
 	 * 
 	 * @param other state to transition to
