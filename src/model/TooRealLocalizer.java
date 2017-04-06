@@ -1,5 +1,7 @@
 package model;
 
+import java.util.Random;
+
 import control.EstimatorInterface;
 
 public class TooRealLocalizer implements EstimatorInterface {
@@ -13,6 +15,8 @@ public class TooRealLocalizer implements EstimatorInterface {
 	private State sensor;
 	
 	private double[][] Tt;
+	
+	private long totalManhattanError = 0, totalHits = 0, timestep = 0;
 	
 	private State int2state(int i) {
 		//    s 1-3   ...     sN
@@ -128,6 +132,8 @@ public class TooRealLocalizer implements EstimatorInterface {
 	
 	
 	public void update() {
+		timestep++;
+		
 		// Update real world
 		bot.update();
 		
@@ -157,8 +163,31 @@ public class TooRealLocalizer implements EstimatorInterface {
 		
 		// F = NORMALIZE(F_t)
 		double a = 1.0 / sum;
+		int prediction = 0;
+		double max_pred = 0;
 		for (int i = 0; i < num_states; i++) {
 			F[i] = F_t[i] * a;
+			if (F[i] > max_pred) {
+				max_pred = F[i];
+				prediction = i;
+			}
 		}
+		
+		int[] pos = getCurrentTruePosition();
+		//int[] pos = bot.simulate().position();
+		//int[] guess = int2state(prediction).position();
+		//int[] guess = getCurrentReading();
+		int[] guess = int2state((new Random()).nextInt(num_states)).position();
+		if (guess == null) {
+			guess = new int[]{getNumRows() / 2, getNumCols() / 2};
+		}
+		
+		totalManhattanError += Math.abs(pos[0] - guess[0]);
+		totalManhattanError += Math.abs(pos[1] - guess[1]);
+		
+		if (pos[0] == guess[0] && pos[1] == guess[1]) {
+			totalHits++;
+		}
+		System.out.println("t=" + timestep + ", ame=" + ((totalManhattanError+0.0)/timestep) + ", hitrate=" + ((totalHits+0.0)/timestep));
 	}
 }
