@@ -7,7 +7,7 @@ public class Bot {
 		current = s;
 	}
 	
-	public void update() {
+	public State simulate() {
 		double[][] T = current.transition();
 		
 		double r = Math.random();
@@ -29,7 +29,11 @@ public class Bot {
 		}
 		
 		// Convert to world coords: [0..2, 0..2] to [-1..1, -1..1] 
-		current = current.offset(nx - 1, ny - 1, nh);
+		return current.offset(nx - 1, ny - 1, nh);
+	}
+	
+	public void update() {
+		current = simulate();
 	}
 	
 	public State getState() { return current; }
